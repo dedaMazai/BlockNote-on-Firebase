@@ -4,6 +4,7 @@ import { classNames } from '@/lib/classNames/classNames';
 import { Suspense, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppRouter } from './providers/router';
+import { Navbar } from '@/components/Navbar';
 
 export const App = () => {
     const dispatch = useDispatch();
@@ -16,6 +17,7 @@ export const App = () => {
     return (
         <div className={classNames('app', {}, [])}>
             <Suspense fallback={<PageLoader />}>
+                <Navbar />
                 <div className="content-page">
                     {inited && (
                         <AppRouter />
