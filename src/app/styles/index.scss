@@ -1,0 +1,28 @@
+@import 'antd/dist/reset.css';
+@import "reset";
+@import "variables/global";
+
+.app {
+    min-height: 100vh;
+}
+
+.content-page {
+    display: flex;
+    overflow: hidden;
+    height: calc(100vh - var(--navbar-height));
+}
+
+*::-webkit-scrollbar {
+    width: 8px;               /* ширина scrollbar */
+    height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+    background: var(--bg-color);        /* цвет дорожки */
+}
+
+*::-webkit-scrollbar-thumb {
+    background-color: var(--inverted-bg-color);    /* цвет плашки */
+    border-radius: 3px;       /* закругления плашки */
+    border: 1px solid var(--bg-color);  /* padding вокруг плашки */
+}
