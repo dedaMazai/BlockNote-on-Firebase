@@ -4,6 +4,7 @@ import { StoreProvider } from '@/app/providers/StoreProvider';
 import { App } from './app/App';
 import ErrorBoundary from 'antd/es/alert/ErrorBoundary';
 
+import './firebase';
 import '@/app/styles/index.scss';
 
 const container = document.getElementById('root');
