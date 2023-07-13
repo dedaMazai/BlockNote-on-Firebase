@@ -7,6 +7,7 @@ import CircularDependencyPlugin from 'circular-dependency-plugin';
 import CopyPlugin from 'copy-webpack-plugin';
 import ForkTsCheckerWebpackPlugin from 'fork-ts-checker-webpack-plugin';
 import { BuildOptions } from './types/config';
+import Dotenv from 'dotenv-webpack';
 
 export function buildPlugins(options: BuildOptions): webpack.WebpackPluginInstance[] {
     const {
@@ -16,6 +17,7 @@ export function buildPlugins(options: BuildOptions): webpack.WebpackPluginInstan
         project,
     } = options;
     const plugins = [
+        new Dotenv(),
         new HtmlWebpackPlugin({
             template: paths.html,
         }),
