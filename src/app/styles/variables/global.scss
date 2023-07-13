@@ -1,6 +1,6 @@
 :root {
     --bg-color: #fff;
-    --inverted-bg-color: #8c8c8c;
+    --inverted-bg-color: #001529;
     --primary-color: #fefefc;
     --grey100: #cfcdd3;
     --grey200: #898a9e;
@@ -9,6 +9,8 @@
     --red: #dd5471;
     --dark: #d0cdff30;
     --orange: #f37032;
-    --navbar-height: 65px;
+
+    // Константы
+    --navbar-height: 50px;
     --sidebar-width: 200px;
 }

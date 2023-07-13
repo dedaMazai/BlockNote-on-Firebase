@@ -1,0 +1,11 @@
+# Ignore artifacts:
+*.html
+build
+coverage
+node_modules
+.eslintrc.json
+.prettierrc.json
+package-lock.json
+package.json
+tsconfig.json
+webpack.config.js

@@ -1,3 +1,13 @@
 .MainPage {
-    margin-top: 1rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: calc(100vh - var(--navbar-height));
+}
+
+.bodyAuthorized {
+    background: #1677ff;
+    padding: 20px;
+    border-radius: 5px;
 }

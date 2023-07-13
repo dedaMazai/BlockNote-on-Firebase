@@ -16,7 +16,7 @@ export enum AppRouters {
 
 export const RoutePath: Record<AppRouters, string> = {
     [AppRouters.MAIN]: '/',
-    [AppRouters.BLOCK_NOTE]: '/',
+    [AppRouters.BLOCK_NOTE]: '/block_note',
     // last
     [AppRouters.NOT_FOUND]: '*',
 };
@@ -29,7 +29,7 @@ export const routeConfig: Record<AppRouters, AppRoutersProps> = {
     [AppRouters.BLOCK_NOTE]: {
         path: RoutePath.block_note,
         element: <BlockNotePage />,
-        authOnly: true,
+        // authOnly: true,
     },
     [AppRouters.NOT_FOUND]: {
         path: RoutePath.not_found,
