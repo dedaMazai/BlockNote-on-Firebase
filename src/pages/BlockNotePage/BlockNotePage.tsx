@@ -120,14 +120,23 @@ export const BlockNotePage = ({ className }: BlockNotePageProps) => {
                         </HStack>
                         <Divider style={{margin: 0}} />
                         <VStack gap="16" max>
-                            <HStack max justify="between">
+                            <HStack align="start" max justify="between" className={cls.blockWithNote}>
                                 <Checkbox value={true}>
-                                    <Typography.Text delete style={{marginBottom: 0}}>
-                                        Сходить куда-то зачем-то когда-то
-                                    </Typography.Text>
+                                    <VStack gap="8">
+                                        <Typography.Text strong delete style={{marginBottom: 0}}>
+                                            Сходить куда-то зачем-то когда-то
+                                        </Typography.Text>
+                                        <Typography.Text delete style={{marginBottom: 0}}>
+                                            Описание куда и зачем сходить: Сходить куда-то зачем-то когда-то
+                                            Описание куда и зачем сходить: Сходить куда-то зачем-то когда-то
+                                            Описание куда и зачем сходить: Сходить куда-то зачем-то когда-то
+                                            Описание куда и зачем сходить: Сходить куда-то зачем-то когда-то
+                                            Описание куда и зачем сходить: Сходить куда-то зачем-то когда-то
+                                        </Typography.Text>
+                                    </VStack>
                                 </Checkbox>
                                 <HStack gap="16">
-                                    <Typography.Text style={{marginBottom: 0}}>
+                                    <Typography.Text style={{marginBottom: 0, whiteSpace: 'nowrap'}}>
                                         23.12.2023 12:43
                                     </Typography.Text>
                                     <Button type="primary" danger>
@@ -197,6 +206,21 @@ export const BlockNotePage = ({ className }: BlockNotePageProps) => {
                             )}
                         />
                     </HStack>
+                    <HStack max gap="8">
+                        <Button
+                            type="primary"
+                            style={{width: '100%'}}
+                            onClick={() => {}}
+                        >
+                            Создать
+                        </Button>
+                        <Button
+                            style={{width: '100%'}}
+                            onClick={() => {}}
+                        >
+                            Закрыть
+                        </Button>
+                    </HStack>
                 </VStack>
             </Modal>
             <Modal
@@ -226,6 +250,21 @@ export const BlockNotePage = ({ className }: BlockNotePageProps) => {
                             </Col>
                         ))}
                     </Row>
+                    <HStack max gap="8">
+                        <Button
+                            type="primary"
+                            style={{width: '100%'}}
+                            onClick={() => {}}
+                        >
+                            Добавить
+                        </Button>
+                        <Button
+                            style={{width: '100%'}}
+                            onClick={() => {}}
+                        >
+                            Закрыть
+                        </Button>
+                    </HStack>
                 </VStack>
             </Modal>
         </Layout>
