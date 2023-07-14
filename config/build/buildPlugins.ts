@@ -46,12 +46,6 @@ export function buildPlugins(options: BuildOptions): webpack.WebpackPluginInstan
         plugins.push(new ReactRefreshWebpackPlugin());
         plugins.push(new webpack.HotModuleReplacementPlugin());
         // plugins.push(new BundleAnalyzerPlugin({ openAnalyzer: false }));
-        plugins.push(
-            new CircularDependencyPlugin({
-                exclude: /node_modules/,
-                failOnError: true,
-            }),
-        );
     }
 
     return plugins;

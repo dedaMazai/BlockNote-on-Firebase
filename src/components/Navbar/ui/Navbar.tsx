@@ -19,7 +19,6 @@ interface NavbarProps {
 export const Navbar = memo(({ className }: NavbarProps) => {
     const dispatch = useAppDispatch();
     const authData = useSelector(getUserAuthData);
-    const navigate = useNavigate();
 
     if (authData) {
         return (
