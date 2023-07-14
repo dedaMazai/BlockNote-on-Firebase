@@ -1,6 +1,6 @@
 
 import { classNames } from '@/lib/classNames/classNames';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button, Checkbox, Col, DatePicker, Divider, Input, Layout, Menu, Modal, Row, Typography, theme } from 'antd';
 import Sider from 'antd/es/layout/Sider';
 import { Content, Header } from 'antd/es/layout/layout';
@@ -55,6 +55,8 @@ export const BlockNotePage = ({ className }: BlockNotePageProps) => {
             label: 'Сидоров',
         },
     ]
+
+    useEffect(() => {console.log(222)}, [])
     return (
         <Layout className={classNames(cls.BlockNotePage, {}, [className])}>
             <Sider style={{overflowY: 'auto'}} trigger={null} collapsible collapsed={collapsed}>
@@ -66,10 +68,13 @@ export const BlockNotePage = ({ className }: BlockNotePageProps) => {
                         defaultSelectedKeys={['1']}
                         items={items}
                     />
-                    <Button type="primary" style={{margin: '4px'}} onClick={() => setAddUser(true)}>
-                        <HStack gap="8" max>
+                    <Button type="primary" style={{margin: '4px', maxWidth: 'inherit'}} onClick={() => setAddUser(true)}>
+                        <HStack max>
                             <UserAddOutlined />
-                            {!collapsed && 'Добавить'}
+                            <div className={classNames(
+                                cls.addUserButton,
+                                {[cls.addUserButtonCollapsed]: collapsed}
+                            )}>Добавить</div>
                         </HStack>
                     </Button>
                 </VStack>
@@ -110,9 +115,9 @@ export const BlockNotePage = ({ className }: BlockNotePageProps) => {
                                 <Typography.Title level={4} style={{marginBottom: 0}}>
                                     Иванов
                                 </Typography.Title>
-                                <Button type="text">
+                                {/* <Button type="text">
                                     <EditOutlined />
-                                </Button>
+                                </Button> */}
                             </HStack>
                             <Button type="primary" onClick={() => setAddNote(true)}>
                                 Добавить задачу
@@ -144,14 +149,23 @@ export const BlockNotePage = ({ className }: BlockNotePageProps) => {
                                     </Button>
                                 </HStack>
                             </HStack>
-                            <HStack max justify="between">
-                                <Checkbox>
-                                    <Typography.Text style={{marginBottom: 0}}>
-                                        Сходить куда-то зачем-то когда-то
-                                    </Typography.Text>
+                            <HStack align="start" max justify="between" className={cls.blockWithNote}>
+                                <Checkbox value={true}>
+                                    <VStack gap="8">
+                                        <Typography.Text strong style={{marginBottom: 0}}>
+                                            Сходить куда-то зачем-то когда-то
+                                        </Typography.Text>
+                                        <Typography.Text style={{marginBottom: 0}}>
+                                            Описание куда и зачем сходить: Сходить куда-то зачем-то когда-то
+                                            Описание куда и зачем сходить: Сходить куда-то зачем-то когда-то
+                                            Описание куда и зачем сходить: Сходить куда-то зачем-то когда-то
+                                            Описание куда и зачем сходить: Сходить куда-то зачем-то когда-то
+                                            Описание куда и зачем сходить: Сходить куда-то зачем-то когда-то
+                                        </Typography.Text>
+                                    </VStack>
                                 </Checkbox>
                                 <HStack gap="16">
-                                    <Typography.Text style={{marginBottom: 0}}>
+                                    <Typography.Text style={{marginBottom: 0, whiteSpace: 'nowrap'}}>
                                         23.12.2023 12:43
                                     </Typography.Text>
                                     <Button type="primary" danger>

@@ -5,7 +5,7 @@ import {
 } from "firebase/auth";
 import { VStack } from '@/components/Stack';
 import { Button, Input, Typography, notification } from 'antd';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { getUserAuthData, userActions } from "@/components/User";
 import { useSelector } from "react-redux";
 
@@ -63,6 +63,7 @@ export const AuthorizationPage = () => {
                 });
         }
     };
+    useEffect(() => {console.log(1111111)}, [])
 
     if (auth) {
         return <Navigate to={RoutePath.block_note} state={{ from: location }} replace />;
