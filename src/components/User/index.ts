@@ -5,7 +5,6 @@ export {
 
 export type {
     UserSchema,
-    User,
 } from './modal/types/user';
 
 export {

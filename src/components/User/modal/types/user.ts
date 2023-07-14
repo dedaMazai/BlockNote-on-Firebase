@@ -1,7 +1,4 @@
-export interface User {
-    refresh_token?: string;
-    access_token?: string;
-}
+import { User } from "firebase/auth";
 
 export interface UserSchema {
     authData?: User;

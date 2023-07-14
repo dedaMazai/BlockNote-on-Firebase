@@ -12,7 +12,7 @@ export function RequireAuth({ children }: RequireAuthProps) {
     const auth = useSelector(getUserAuthData);
 
     if (!auth) {
-        return <Navigate to={RoutePath.main} state={{ from: location }} replace />;
+        return <Navigate to={RoutePath.authorization} state={{ from: location }} replace />;
     }
 
     return children;

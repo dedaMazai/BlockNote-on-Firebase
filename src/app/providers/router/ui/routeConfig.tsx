@@ -1,35 +1,35 @@
 import { RouteProps } from 'react-router-dom';
-import { MainPage } from '@/pages/MainPage/MainPage';
+import { AuthorizationPage } from '@/pages/AuthorizationPage/AuthorizationPage';
 import { NotFoundPage } from '@/pages/NotFoundPage/NotFoundPage';
 import { BlockNotePage } from '@/pages/BlockNotePage/BlockNotePage';
 
 export type AppRoutersProps = RouteProps & {
-    authOnly?: boolean;
+    auth?: boolean;
 }
 
 export enum AppRouters {
-  MAIN = 'main',
-  BLOCK_NOTE = 'block_note',
+    BLOCK_NOTE = 'block_note',
+  AUTHORIZATION = 'authorization',
   // last
   NOT_FOUND = 'not_found'
 }
 
 export const RoutePath: Record<AppRouters, string> = {
-    [AppRouters.MAIN]: '/',
-    [AppRouters.BLOCK_NOTE]: '/block_note',
+    [AppRouters.BLOCK_NOTE]: '/',
+    [AppRouters.AUTHORIZATION]: '/authorization',
     // last
     [AppRouters.NOT_FOUND]: '*',
 };
 
 export const routeConfig: Record<AppRouters, AppRoutersProps> = {
-    [AppRouters.MAIN]: {
-        path: RoutePath.main,
-        element: <MainPage />,
-    },
     [AppRouters.BLOCK_NOTE]: {
         path: RoutePath.block_note,
         element: <BlockNotePage />,
-        // authOnly: true,
+        auth: true,
+    },
+    [AppRouters.AUTHORIZATION]: {
+        path: RoutePath.authorization,
+        element: <AuthorizationPage />,
     },
     [AppRouters.NOT_FOUND]: {
         path: RoutePath.not_found,
