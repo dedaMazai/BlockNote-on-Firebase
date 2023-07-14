@@ -22,8 +22,6 @@ export const IconsUser = {
     WarningOutlined: <WarningOutlined />,
     ClockCircleOutlined: <ClockCircleOutlined />,
     StopOutlined: <StopOutlined />,
-    DeleteOutlined: <DeleteOutlined />,
-    AreaChartOutlined: <AreaChartOutlined />,
     QqOutlined: <QqOutlined />,
     SketchOutlined: <SketchOutlined />,
     FrownOutlined: <FrownOutlined />,

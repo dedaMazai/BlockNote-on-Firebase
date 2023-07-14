@@ -1,7 +1,7 @@
 
 import { classNames } from '@/lib/classNames/classNames';
 import { useState } from 'react';
-import { Button, Checkbox, Divider, Layout, Menu, Typography, theme } from 'antd';
+import { Button, Checkbox, Col, DatePicker, Divider, Input, Layout, Menu, Modal, Row, Typography, theme } from 'antd';
 import Sider from 'antd/es/layout/Sider';
 import { Content, Header } from 'antd/es/layout/layout';
 import {
@@ -10,6 +10,7 @@ import {
     MenuFoldOutlined,
     MenuUnfoldOutlined,
     UploadOutlined,
+    UserAddOutlined,
     UserOutlined,
     VideoCameraOutlined,
 } from '@ant-design/icons';
@@ -22,8 +23,17 @@ interface BlockNotePageProps {
   className?: string;
 }
 
+
 export const BlockNotePage = ({ className }: BlockNotePageProps) => {
     const [collapsed, setCollapsed] = useState(false);
+    const [addUser, setAddUser] = useState(false);
+    const [addNote, setAddNote] = useState(false);
+    const [name, setName] = useState('');
+    const [personIconName, setPersonIconName] = useState('');
+    const [text, setText] = useState('');
+    const [title, setTitle] = useState('');
+    const [deadline, setDeadLine] = useState<any>();
+    const [deadlineString, setDeadLineString] = useState<any>();
     const {
         token: { colorBgContainer },
     } = theme.useToken();
@@ -31,29 +41,38 @@ export const BlockNotePage = ({ className }: BlockNotePageProps) => {
     const items = [
         {
             key: '1',
-            icon: IconsUser.AreaChartOutlined,
+            icon: IconsUser.FrownOutlined,
             label: 'Иванов',
         },
         {
             key: '2',
-            icon: IconsUser.AreaChartOutlined,
+            icon: IconsUser.FrownOutlined,
             label: 'Петров',
         },
         {
             key: '3',
-            icon: IconsUser.AreaChartOutlined,
+            icon: IconsUser.FrownOutlined,
             label: 'Сидоров',
         },
     ]
     return (
         <Layout className={classNames(cls.BlockNotePage, {}, [className])}>
-            <Sider style={{overflow: 'auto'}} trigger={null} collapsible collapsed={collapsed}>
-                <Menu
-                    theme="dark"
-                    mode="inline"
-                    defaultSelectedKeys={['1']}
-                    items={items}
-                />
+            <Sider style={{overflowY: 'auto'}} trigger={null} collapsible collapsed={collapsed}>
+                <VStack justify="between" align="center" className={cls.menuWrapper}>
+                    <Menu
+                        style={{width: '100%'}}
+                        theme="dark"
+                        mode="inline"
+                        defaultSelectedKeys={['1']}
+                        items={items}
+                    />
+                    <Button type="primary" style={{margin: '4px'}} onClick={() => setAddUser(true)}>
+                        <HStack gap="8" max>
+                            <UserAddOutlined />
+                            {!collapsed && 'Добавить'}
+                        </HStack>
+                    </Button>
+                </VStack>
             </Sider>
             <Layout>
                 <HStack className={cls.Header}>
@@ -95,7 +114,7 @@ export const BlockNotePage = ({ className }: BlockNotePageProps) => {
                                     <EditOutlined />
                                 </Button>
                             </HStack>
-                            <Button type="primary">
+                            <Button type="primary" onClick={() => setAddNote(true)}>
                                 Добавить задачу
                             </Button>
                         </HStack>
@@ -135,6 +154,80 @@ export const BlockNotePage = ({ className }: BlockNotePageProps) => {
                     </VStack>
                 </Content>
             </Layout>
+            <Modal
+                    centered
+                    open={addNote}
+                    onOk={() => setAddNote(false)}
+                    onCancel={() => setAddNote(false)}
+                    footer={null}
+                    closable={false}
+            >
+                <VStack gap="16" max>
+                    <HStack gap="16" max>
+                        <Typography.Title level={5} style={{width: '100px', flexShrink: 0, whiteSpace: 'nowrap'}}>
+                            Заголовок:
+                        </Typography.Title>
+                        <Input
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                        />
+                    </HStack>
+                    <HStack gap="16" max>
+                        <Typography.Title level={5} style={{width: '100px', flexShrink: 0, whiteSpace: 'nowrap'}}>
+                            Описание:
+                        </Typography.Title>
+                        <Input.TextArea
+                            autoSize
+                            value={text}
+                            onChange={(e) => setText(e.target.value)}
+                        />
+                    </HStack>
+                    <HStack gap="16" max>
+                        <Typography.Title level={5} style={{width: '100px', flexShrink: 0, whiteSpace: 'nowrap'}}>
+                            Дедлайн:
+                        </Typography.Title>
+                        <DatePicker
+                            value={deadline}
+                            showTime
+                            onChange={(
+                                (value, valueString) => {
+                                    setDeadLine(value)
+                                    setDeadLineString(valueString)
+                                }
+                            )}
+                        />
+                    </HStack>
+                </VStack>
+            </Modal>
+            <Modal
+                    centered
+                    open={addUser}
+                    onOk={() => setAddUser(false)}
+                    onCancel={() => setAddUser(false)}
+                    footer={null}
+                    closable={false}
+            >
+                <VStack gap="16">
+                    <Input
+                        placeholder="Как зовут"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                    />
+                    <Row justify="center" gutter={[4, 4]} style={{width: '100%'}}>
+                        {Object.entries(IconsUser).map(([keyName, iconValue]) => (
+                            <Col xs={4} key={keyName}>
+                                <Button
+                                    type={personIconName === keyName ? "primary" : "text" }
+                                    onClick={() => setPersonIconName(keyName)}
+                                    style={{width: '100%'}}
+                                >
+                                    {iconValue}
+                                </Button>
+                            </Col>
+                        ))}
+                    </Row>
+                </VStack>
+            </Modal>
         </Layout>
     );
 };
