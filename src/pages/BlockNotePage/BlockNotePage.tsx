@@ -1,8 +1,8 @@
 
-import { collection, doc, getDocs, setDoc } from "firebase/firestore";
+import { addDoc, collection, doc, getDoc, getDocs, onSnapshot, setDoc } from "firebase/firestore";
 import { getFirestore } from "firebase/firestore";
 import { classNames } from '@/lib/classNames/classNames';
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useState } from 'react';
 import {
     Button,
     Checkbox,
@@ -61,7 +61,7 @@ export const BlockNotePage = ({ className }: BlockNotePageProps) => {
     const [addUser, setAddUser] = useState(false);
     const [loadingSaveUser, setLoadingSaveUser] = useState(false);
     const [loadingAddNote, setLoadingAddNote] = useState(false);
-    const [selectName, setSelectName] = useState(items[0].key);
+    const [selectIdCustomer, setSelectIdCustomer] = useState();
     const [addNote, setAddNote] = useState(false);
     const [name, setName] = useState('');
     const [personIconName, setPersonIconName] = useState('UserOutlined');
@@ -74,14 +74,18 @@ export const BlockNotePage = ({ className }: BlockNotePageProps) => {
         token: { colorBgContainer },
     } = theme.useToken();
 
+    const [customers, setCustomers] = useState<any[]>([]);
+    const [notes, setNotes] = useState<any[]>([]);
+
+    const handleSelectMenuItem = (e: any) => {
+        setSelectIdCustomer(e.key)
+    };
+
     const handleSaveUser = () => {
         setLoadingSaveUser(true);
-        setDoc(doc(db, "users", auth!.uid), {
-            customers: {
-                name,
-                personIconName,
-            },
-            userId: auth!.uid,
+        addDoc(collection(db, 'users', auth!.uid, 'customers'), {
+            name,
+            personIconName,
         })
             .then(() => {
                 setName('');
@@ -100,50 +104,78 @@ export const BlockNotePage = ({ className }: BlockNotePageProps) => {
     };
 
     const handleAddNote = () => {
-        setLoadingAddNote(true);
-        setDoc(doc(db, 'users', auth!.uid), {
-            customers: {
+        if (selectIdCustomer) {
+            setLoadingAddNote(true);
+            addDoc(collection(db, 'users', auth!.uid, 'customers', selectIdCustomer, 'notes'), {
                 title,
                 text,
                 deadlineString,
-            }
-        }, { merge: true })
-            .then(() => {
-                setTitle('');
-                setText('');
-                setDeadLine(undefined);
-                setDeadLineString(undefined);
-                setAddNote(false);
+                resolved: false,
             })
-            .catch((error: any) => {
-                console.log(error)
-                notification.error({
-                    message: `Ошибка сохранения записи: ${error.message}`,
+                .then(() => {
+                    setTitle('');
+                    setText('');
+                    setDeadLine(undefined);
+                    setDeadLineString(undefined);
+                    setAddNote(false);
                 })
-            })
-            .finally(() => {
-                setLoadingAddNote(false);
-            });
-    };
-
-    const handleSelectMenuItem = (e: any) => {
-        setSelectName(e.key)
+                .catch((error: any) => {
+                    console.log(error)
+                    notification.error({
+                        message: `Ошибка сохранения записи: ${error.message}`,
+                    })
+                })
+                .finally(() => {
+                    setLoadingAddNote(false);
+                });
+        }
     };
 
     useEffect(() => {
-        getDocs(collection(db, "users"))
-            .then((querySnapshot) => {
-                querySnapshot.forEach((doc) => {
-                    console.log(doc, doc.data());
-                });
-            })
-            .catch((error: any) => {
-                console.log(error)
-                notification.error({
-                    message: `Ошибка получения клиентов: ${error.message}`,
-                })
-            })
+        onSnapshot(collection(db, 'users', auth!.uid, 'customers'), (docSnapshot: any) => {
+            const result: any[] = [];
+            docSnapshot.forEach((doc: any) => {
+                const customerResult = {
+                    id: '',
+                    name: '',
+                    personIconName: '',
+                };
+                const dataRes = doc.data();
+                customerResult.id = doc.id;
+                customerResult.name = dataRes.name;
+                customerResult.personIconName = dataRes.personIconName
+                result.push(customerResult);
+            });
+            console.log(result)
+            setCustomers(result)
+        })
     }, [])
+
+    useEffect(() => {
+        if (selectIdCustomer) {
+            onSnapshot(collection(db, 'users', auth!.uid, 'customers', selectIdCustomer, 'notes'), (docSnapshot: any) => {
+                const result: any[] = [];
+                docSnapshot.forEach((doc: any) => {
+                    const noteResult = {
+                        id: '',
+                        text: '',
+                        title: '',
+                        deadlineString: '',
+                        resolved: '',
+                    };
+                    const dataRes = doc.data();
+                    noteResult.id = doc.id;
+                    noteResult.text = dataRes.text;
+                    noteResult.title = dataRes.title;
+                    noteResult.deadlineString = dataRes.deadlineString
+                    noteResult.resolved = dataRes.resolved
+                    result.push(noteResult);
+                });
+                console.log(result);
+                setNotes(result)
+            })
+        }
+    }, [selectIdCustomer])
 
     return (
         <Layout className={classNames(cls.BlockNotePage, {}, [className])}>
@@ -153,10 +185,15 @@ export const BlockNotePage = ({ className }: BlockNotePageProps) => {
                         style={{width: '100%'}}
                         onClick={handleSelectMenuItem}
                         theme="dark"
-                        selectedKeys={[selectName]}
+                        selectedKeys={selectIdCustomer ? [selectIdCustomer] : []}
                         mode="inline"
-                        defaultSelectedKeys={['1']}
-                        items={items}
+                        items={customers.map((customer) => (
+                            {
+                                key: customer.id,
+                                icon: IconsUser[customer.personIconName as keyof typeof IconsUser],
+                                label: customer.name,
+                            }
+                        ))}
                     />
                     <Button type="primary" style={{margin: '4px', maxWidth: 'inherit'}} onClick={() => setAddUser(true)}>
                         <HStack max>
@@ -203,7 +240,7 @@ export const BlockNotePage = ({ className }: BlockNotePageProps) => {
                         <HStack max gap="16" justify="between">
                             <HStack gap="8">
                                 <Typography.Title level={4} style={{marginBottom: 0}}>
-                                    Иванов
+                                    {customers.find((customer) => customer.id === selectIdCustomer).name}
                                 </Typography.Title>
                                 {/* <Button type="text">
                                     <EditOutlined />
@@ -215,54 +252,29 @@ export const BlockNotePage = ({ className }: BlockNotePageProps) => {
                         </HStack>
                         <Divider style={{margin: 0}} />
                         <VStack gap="16" max>
-                            <HStack align="start" max justify="between" className={cls.blockWithNote}>
-                                <Checkbox value={true}>
-                                    <VStack gap="8">
-                                        <Typography.Text strong delete style={{marginBottom: 0}}>
-                                            Сходить куда-то зачем-то когда-то
+                            {notes.map((note) => (
+
+                                <HStack key={note.id} align="start" max justify="between" className={cls.blockWithNote}>
+                                    <Checkbox checked={note.resolved} style={{width: '100%'}}>
+                                        <VStack max>
+                                            <Typography.Text strong delete={note.resolved} style={{marginBottom: 0}}>
+                                                {note.title}
+                                            </Typography.Text>
+                                            <Typography.Text style={{marginBottom: 0}}>
+                                                {note.text}
+                                            </Typography.Text>
+                                        </VStack>
+                                    </Checkbox>
+                                    <HStack gap="16">
+                                        <Typography.Text style={{marginBottom: 0, whiteSpace: 'nowrap'}}>
+                                            {note.deadlineString}
                                         </Typography.Text>
-                                        <Typography.Text delete style={{marginBottom: 0}}>
-                                            Описание куда и зачем сходить: Сходить куда-то зачем-то когда-то
-                                            Описание куда и зачем сходить: Сходить куда-то зачем-то когда-то
-                                            Описание куда и зачем сходить: Сходить куда-то зачем-то когда-то
-                                            Описание куда и зачем сходить: Сходить куда-то зачем-то когда-то
-                                            Описание куда и зачем сходить: Сходить куда-то зачем-то когда-то
-                                        </Typography.Text>
-                                    </VStack>
-                                </Checkbox>
-                                <HStack gap="16">
-                                    <Typography.Text style={{marginBottom: 0, whiteSpace: 'nowrap'}}>
-                                        23.12.2023 12:43
-                                    </Typography.Text>
-                                    <Button type="primary" danger>
-                                        <DeleteOutlined />
-                                    </Button>
+                                        <Button type="primary" danger>
+                                            <DeleteOutlined />
+                                        </Button>
+                                    </HStack>
                                 </HStack>
-                            </HStack>
-                            <HStack align="start" max justify="between" className={cls.blockWithNote}>
-                                <Checkbox value={true}>
-                                    <VStack gap="8">
-                                        <Typography.Text strong style={{marginBottom: 0}}>
-                                            Сходить куда-то зачем-то когда-то
-                                        </Typography.Text>
-                                        <Typography.Text style={{marginBottom: 0}}>
-                                            Описание куда и зачем сходить: Сходить куда-то зачем-то когда-то
-                                            Описание куда и зачем сходить: Сходить куда-то зачем-то когда-то
-                                            Описание куда и зачем сходить: Сходить куда-то зачем-то когда-то
-                                            Описание куда и зачем сходить: Сходить куда-то зачем-то когда-то
-                                            Описание куда и зачем сходить: Сходить куда-то зачем-то когда-то
-                                        </Typography.Text>
-                                    </VStack>
-                                </Checkbox>
-                                <HStack gap="16">
-                                    <Typography.Text style={{marginBottom: 0, whiteSpace: 'nowrap'}}>
-                                        23.12.2023 12:43
-                                    </Typography.Text>
-                                    <Button type="primary" danger>
-                                        <DeleteOutlined />
-                                    </Button>
-                                </HStack>
-                            </HStack>
+                            ))}
                         </VStack>
                     </VStack>
                 </Content>
@@ -313,7 +325,7 @@ export const BlockNotePage = ({ className }: BlockNotePageProps) => {
                     <HStack max gap="8">
                         <Button
                             type="primary"
-                            disabled={ loadingAddNote || !title || !text || !deadline }
+                            disabled={ loadingAddNote || !title || !text || !deadline || !selectIdCustomer }
                             style={{width: '100%'}}
                             onClick={handleAddNote}
                         >
