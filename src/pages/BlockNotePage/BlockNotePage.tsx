@@ -1,69 +1,159 @@
 
+import { collection, doc, getDocs, setDoc } from "firebase/firestore";
+import { getFirestore } from "firebase/firestore";
 import { classNames } from '@/lib/classNames/classNames';
 import { useEffect, useState } from 'react';
-import { Button, Checkbox, Col, DatePicker, Divider, Input, Layout, Menu, Modal, Row, Typography, theme } from 'antd';
+import {
+    Button,
+    Checkbox,
+    Col,
+    DatePicker,
+    Divider,
+    Input,
+    Layout,
+    Menu,
+    Modal,
+    Row,
+    Typography,
+    notification,
+    theme,
+} from 'antd';
 import Sider from 'antd/es/layout/Sider';
-import { Content, Header } from 'antd/es/layout/layout';
+import { Content } from 'antd/es/layout/layout';
 import {
     DeleteOutlined,
-    EditOutlined,
     MenuFoldOutlined,
     MenuUnfoldOutlined,
-    UploadOutlined,
     UserAddOutlined,
-    UserOutlined,
-    VideoCameraOutlined,
 } from '@ant-design/icons';
-
-import cls from './BlockNotePage.module.scss';
 import { IconsUser } from './IconsUser';
 import { HStack, VStack } from '@/components/Stack';
+import { db } from "@/firebase";
+
+import cls from './BlockNotePage.module.scss';
+import { useSelector } from "react-redux";
+import { getUserAuthData } from "@/components/User";
 
 interface BlockNotePageProps {
   className?: string;
 }
 
+const items = [
+    {
+        key: '1',
+        icon: IconsUser.FrownOutlined,
+        label: 'Иванов',
+    },
+    {
+        key: '2',
+        icon: IconsUser.FrownOutlined,
+        label: 'Петров',
+    },
+    {
+        key: '3',
+        icon: IconsUser.FrownOutlined,
+        label: 'Сидоров',
+    },
+]
 
 export const BlockNotePage = ({ className }: BlockNotePageProps) => {
     const [collapsed, setCollapsed] = useState(false);
     const [addUser, setAddUser] = useState(false);
+    const [loadingSaveUser, setLoadingSaveUser] = useState(false);
+    const [loadingAddNote, setLoadingAddNote] = useState(false);
+    const [selectName, setSelectName] = useState(items[0].key);
     const [addNote, setAddNote] = useState(false);
     const [name, setName] = useState('');
-    const [personIconName, setPersonIconName] = useState('');
+    const [personIconName, setPersonIconName] = useState('UserOutlined');
     const [text, setText] = useState('');
     const [title, setTitle] = useState('');
     const [deadline, setDeadLine] = useState<any>();
     const [deadlineString, setDeadLineString] = useState<any>();
+    const auth = useSelector(getUserAuthData);
     const {
         token: { colorBgContainer },
     } = theme.useToken();
 
-    const items = [
-        {
-            key: '1',
-            icon: IconsUser.FrownOutlined,
-            label: 'Иванов',
-        },
-        {
-            key: '2',
-            icon: IconsUser.FrownOutlined,
-            label: 'Петров',
-        },
-        {
-            key: '3',
-            icon: IconsUser.FrownOutlined,
-            label: 'Сидоров',
-        },
-    ]
+    const handleSaveUser = () => {
+        setLoadingSaveUser(true);
+        setDoc(doc(db, "users", auth!.uid), {
+            customers: {
+                name,
+                personIconName,
+            },
+            userId: auth!.uid,
+        })
+            .then(() => {
+                setName('');
+                setPersonIconName('UserOutlined');
+                setAddUser(false);
+            })
+            .catch((error: any) => {
+                console.log(error)
+                notification.error({
+                    message: `Ошибка сохранения клиента: ${error.message}`,
+                })
+            })
+            .finally(() => {
+                setLoadingSaveUser(false);
+            });
+    };
 
-    useEffect(() => {console.log(222)}, [])
+    const handleAddNote = () => {
+        setLoadingAddNote(true);
+        setDoc(doc(db, 'users', auth!.uid), {
+            customers: {
+                title,
+                text,
+                deadlineString,
+            }
+        }, { merge: true })
+            .then(() => {
+                setTitle('');
+                setText('');
+                setDeadLine(undefined);
+                setDeadLineString(undefined);
+                setAddNote(false);
+            })
+            .catch((error: any) => {
+                console.log(error)
+                notification.error({
+                    message: `Ошибка сохранения записи: ${error.message}`,
+                })
+            })
+            .finally(() => {
+                setLoadingAddNote(false);
+            });
+    };
+
+    const handleSelectMenuItem = (e: any) => {
+        setSelectName(e.key)
+    };
+
+    useEffect(() => {
+        getDocs(collection(db, "users"))
+            .then((querySnapshot) => {
+                querySnapshot.forEach((doc) => {
+                    console.log(doc, doc.data());
+                });
+            })
+            .catch((error: any) => {
+                console.log(error)
+                notification.error({
+                    message: `Ошибка получения клиентов: ${error.message}`,
+                })
+            })
+    }, [])
+
     return (
         <Layout className={classNames(cls.BlockNotePage, {}, [className])}>
             <Sider style={{overflowY: 'auto'}} trigger={null} collapsible collapsed={collapsed}>
                 <VStack justify="between" align="center" className={cls.menuWrapper}>
                     <Menu
                         style={{width: '100%'}}
+                        onClick={handleSelectMenuItem}
                         theme="dark"
+                        selectedKeys={[selectName]}
                         mode="inline"
                         defaultSelectedKeys={['1']}
                         items={items}
@@ -223,14 +313,15 @@ export const BlockNotePage = ({ className }: BlockNotePageProps) => {
                     <HStack max gap="8">
                         <Button
                             type="primary"
+                            disabled={ loadingAddNote || !title || !text || !deadline }
                             style={{width: '100%'}}
-                            onClick={() => {}}
+                            onClick={handleAddNote}
                         >
                             Создать
                         </Button>
                         <Button
                             style={{width: '100%'}}
-                            onClick={() => {}}
+                            onClick={() => setAddNote(false)}
                         >
                             Закрыть
                         </Button>
@@ -267,14 +358,15 @@ export const BlockNotePage = ({ className }: BlockNotePageProps) => {
                     <HStack max gap="8">
                         <Button
                             type="primary"
+                            disabled={loadingSaveUser || !name}
                             style={{width: '100%'}}
-                            onClick={() => {}}
+                            onClick={handleSaveUser}
                         >
                             Добавить
                         </Button>
                         <Button
                             style={{width: '100%'}}
-                            onClick={() => {}}
+                            onClick={() => setAddUser(false)}
                         >
                             Закрыть
                         </Button>

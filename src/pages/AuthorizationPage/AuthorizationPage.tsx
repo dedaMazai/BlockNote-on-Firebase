@@ -1,5 +1,4 @@
 import {
-    getAuth,
     createUserWithEmailAndPassword,
     signInWithEmailAndPassword,
 } from "firebase/auth";
@@ -15,12 +14,13 @@ import { USER_LOCALSTORAGE_KEY } from "@/const/localstorage";
 import { Loader } from "@/components/Loader/Loader";
 import { Navigate, useNavigate, useLocation } from "react-router-dom";
 import { RoutePath } from "@/app/providers/router/ui/routeConfig";
+import { auth } from "@/firebase";
 
 export const AuthorizationPage = () => {
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
     const location = useLocation();
-    const auth = useSelector(getUserAuthData);
+    const isAuth = useSelector(getUserAuthData);
     const [isLogin, setIsLogin] = useState(true);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -28,7 +28,6 @@ export const AuthorizationPage = () => {
 
     const handleLogin = () => {
         setLoading(true);
-        const auth = getAuth();
         if (isLogin) {
             signInWithEmailAndPassword(auth, email, password)
                 .then((userCredential) => {
@@ -63,15 +62,14 @@ export const AuthorizationPage = () => {
                 });
         }
     };
-    useEffect(() => {console.log(1111111)}, [])
 
-    if (auth) {
+    if (isAuth) {
         return <Navigate to={RoutePath.block_note} state={{ from: location }} replace />;
     }
 
     return (
         <div className={cls.AuthorizationPage}>
-            {auth ? (
+            {isAuth ? (
                 <VStack justify="center" align="center" gap="8">
                     <Typography.Title level={4} style={{marginBottom: 0}}>
                         {'Вы авторизованы'}

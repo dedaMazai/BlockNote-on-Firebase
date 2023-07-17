@@ -1,16 +1,18 @@
 import { memo } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { getUserAuthData } from '@/components/User/modal/selectors/getUserAuthData';
 import { classNames } from '@/lib/classNames/classNames';
 import { HStack } from '@/components/Stack';
 import { useAppDispatch } from '@/lib/hooks/useAppDispatch/useAppDispatch';
-import { useNavigate } from 'react-router-dom';
-import { RoutePath } from '@/app/providers/router/ui/routeConfig';
-import { Button, Dropdown, Typography } from 'antd';
+import { Button, Dropdown, Typography, notification } from 'antd';
 import { GithubOutlined } from '@ant-design/icons';
+import { userActions } from '@/components/User';
+import {
+    signOut,
+  } from 'firebase/auth';
 
 import cls from './Navbar.module.scss';
-import { userActions } from '@/components/User';
+import { auth } from '@/firebase';
 
 interface NavbarProps {
   className?: string
@@ -19,6 +21,16 @@ interface NavbarProps {
 export const Navbar = memo(({ className }: NavbarProps) => {
     const dispatch = useAppDispatch();
     const authData = useSelector(getUserAuthData);
+
+    const handleLogout = () => {
+        signOut(auth).then(() => {
+            dispatch(userActions.logout())
+        }).catch((error) => {
+            notification.error({
+                message: `Ошибка выхода: ${error.message}`,
+            })
+        });
+    };
 
     if (authData) {
         return (
@@ -29,7 +41,7 @@ export const Navbar = memo(({ className }: NavbarProps) => {
                     </Button>
                     <Dropdown
                         dropdownRender={(menu) => (
-                            <Button onClick={() => dispatch(userActions.logout())}>Выйти</Button>
+                            <Button onClick={handleLogout}>Выйти</Button>
                         )}
                         trigger={['click']}
                     >
