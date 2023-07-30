@@ -1,5 +1,5 @@
 
-import { addDoc, collection, doc, getDoc, getDocs, onSnapshot, setDoc } from "firebase/firestore";
+import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, onSnapshot, setDoc, updateDoc } from "firebase/firestore";
 import { getFirestore } from "firebase/firestore";
 import { classNames } from '@/lib/classNames/classNames';
 import { useEffect, useLayoutEffect, useState } from 'react';
@@ -14,6 +14,7 @@ import {
     Menu,
     Modal,
     Row,
+    Skeleton,
     Typography,
     notification,
     theme,
@@ -67,6 +68,7 @@ export const BlockNotePage = ({ className }: BlockNotePageProps) => {
     const [personIconName, setPersonIconName] = useState('UserOutlined');
     const [text, setText] = useState('');
     const [title, setTitle] = useState('');
+    const [loadingNote, setLoadingNotes] = useState(false);
     const [deadline, setDeadLine] = useState<any>();
     const [deadlineString, setDeadLineString] = useState<any>();
     const auth = useSelector(getUserAuthData);
@@ -79,6 +81,7 @@ export const BlockNotePage = ({ className }: BlockNotePageProps) => {
 
     const handleSelectMenuItem = (e: any) => {
         setSelectIdCustomer(e.key)
+        setLoadingNotes(true)
     };
 
     const handleSaveUser = () => {
@@ -132,79 +135,127 @@ export const BlockNotePage = ({ className }: BlockNotePageProps) => {
     };
 
     useEffect(() => {
-        onSnapshot(collection(db, 'users', auth!.uid, 'customers'), (docSnapshot: any) => {
-            const result: any[] = [];
-            docSnapshot.forEach((doc: any) => {
-                const customerResult = {
-                    id: '',
-                    name: '',
-                    personIconName: '',
-                };
-                const dataRes = doc.data();
-                customerResult.id = doc.id;
-                customerResult.name = dataRes.name;
-                customerResult.personIconName = dataRes.personIconName
-                result.push(customerResult);
-            });
-            console.log(result)
-            setCustomers(result)
-        })
+        if (auth?.uid) {
+            onSnapshot(collection(db, 'users', auth!.uid, 'customers'), (docSnapshot: any) => {
+                const result: any[] = [];
+                docSnapshot?.forEach((doc: any) => {
+                    const customerResult = {
+                        id: '',
+                        name: '',
+                        personIconName: '',
+                    };
+                    const dataRes = doc?.data();
+                    customerResult.id = doc?.id;
+                    customerResult.name = dataRes?.name;
+                    customerResult.personIconName = dataRes?.personIconName
+                    result.push(customerResult);
+                });
+                // console.log(docSnapshot)
+                setCustomers(result)
+            })
+        }
     }, [])
 
     useEffect(() => {
-        if (selectIdCustomer) {
-            onSnapshot(collection(db, 'users', auth!.uid, 'customers', selectIdCustomer, 'notes'), (docSnapshot: any) => {
-                const result: any[] = [];
-                docSnapshot.forEach((doc: any) => {
-                    const noteResult = {
-                        id: '',
-                        text: '',
-                        title: '',
-                        deadlineString: '',
-                        resolved: '',
-                    };
-                    const dataRes = doc.data();
-                    noteResult.id = doc.id;
-                    noteResult.text = dataRes.text;
-                    noteResult.title = dataRes.title;
-                    noteResult.deadlineString = dataRes.deadlineString
-                    noteResult.resolved = dataRes.resolved
-                    result.push(noteResult);
-                });
-                console.log(result);
-                setNotes(result)
-            })
+        if (selectIdCustomer && auth?.uid) {
+            onSnapshot(
+                collection(db, 'users', auth.uid, 'customers', selectIdCustomer, 'notes'),
+                { includeMetadataChanges: true },
+                (docSnapshot: any) => {
+                    const result: any[] = [];
+                    docSnapshot?.forEach((doc: any) => {
+                        const noteResult = {
+                            id: '',
+                            text: '',
+                            title: '',
+                            deadlineString: '',
+                            resolved: '',
+                        };
+                        const dataRes = doc.data();
+                        noteResult.id = doc.id;
+                        noteResult.text = dataRes.text;
+                        noteResult.title = dataRes.title;
+                        noteResult.deadlineString = dataRes.deadlineString
+                        noteResult.resolved = dataRes.resolved
+                        result.push(noteResult);
+                    });
+                    // console.log(docSnapshot.metadata);
+                    setNotes(result)
+                    setLoadingNotes(false)
+                })
         }
     }, [selectIdCustomer])
+
+    const handleDeleteNode = async (id: string) => {
+        if (selectIdCustomer) {
+            await deleteDoc(doc(db, 'users', auth!.uid, 'customers', selectIdCustomer, 'notes', id))
+        }
+    }
+
+    const handleChangeResolve = async (id: string, resolved: boolean) => {
+        if (selectIdCustomer) {
+            const note = doc(db, 'users', auth!.uid, 'customers', selectIdCustomer, 'notes', id)
+            if (resolved) {
+                notification.error({
+                    message: 'Отменено.',
+                })
+                await updateDoc(note, {
+                    resolved: false
+                });
+            } else {
+                notification.success({
+                    message: 'Выполнено!',
+                })
+                await updateDoc(note, {
+                    resolved: true
+                });
+            }
+        }
+    }
 
     return (
         <Layout className={classNames(cls.BlockNotePage, {}, [className])}>
             <Sider style={{overflowY: 'auto'}} trigger={null} collapsible collapsed={collapsed}>
-                <VStack justify="between" align="center" className={cls.menuWrapper}>
-                    <Menu
-                        style={{width: '100%'}}
-                        onClick={handleSelectMenuItem}
-                        theme="dark"
-                        selectedKeys={selectIdCustomer ? [selectIdCustomer] : []}
-                        mode="inline"
-                        items={customers.map((customer) => (
-                            {
-                                key: customer.id,
-                                icon: IconsUser[customer.personIconName as keyof typeof IconsUser],
-                                label: customer.name,
-                            }
-                        ))}
-                    />
-                    <Button type="primary" style={{margin: '4px', maxWidth: 'inherit'}} onClick={() => setAddUser(true)}>
-                        <HStack max>
-                            <UserAddOutlined />
-                            <div className={classNames(
-                                cls.addUserButton,
-                                {[cls.addUserButtonCollapsed]: collapsed}
-                            )}>Добавить</div>
-                        </HStack>
-                    </Button>
-                </VStack>
+                {customers.length ? (
+                    <VStack justify="between" align="center" className={cls.menuWrapper}>
+                        <Menu
+                            style={{width: '100%'}}
+                            onClick={handleSelectMenuItem}
+                            theme="dark"
+                            selectedKeys={selectIdCustomer ? [selectIdCustomer] : []}
+                            mode="inline"
+                            items={customers.map((customer) => (
+                                {
+                                    key: customer?.id,
+                                    icon: IconsUser[customer?.personIconName as keyof typeof IconsUser],
+                                    label: customer?.name,
+                                }
+                            ))}
+                        />
+                        <Button type="primary" style={{margin: '4px', marginBottom: '16px', maxWidth: 'inherit'}} onClick={() => setAddUser(true)}>
+                            <HStack max>
+                                <UserAddOutlined />
+                                <div className={classNames(
+                                    cls.addUserButton,
+                                    {[cls.addUserButtonCollapsed]: collapsed}
+                                )}>Добавить</div>
+                            </HStack>
+                        </Button>
+                    </VStack>
+                ) : (
+                    <VStack gap="16">
+                        <div className={cls.skeletonWrapper}>
+                            <Skeleton.Input active size="default" block />
+                        </div>
+                        <div className={cls.skeletonWrapper}>
+                            <Skeleton.Input active size="default" block />
+                        </div>
+                        <div className={cls.skeletonWrapper}>
+                            <Skeleton.Input active size="default" block />
+                        </div>
+                    </VStack>
+
+                )}
             </Sider>
             <Layout>
                 <HStack className={cls.Header}>
@@ -219,28 +270,31 @@ export const BlockNotePage = ({ className }: BlockNotePageProps) => {
                             marginRight: '24px'
                         }}
                     />
-                    <HStack gap="16">
-                        <Button type="primary" size="large" danger>
-                            Иванов
-                        </Button>
-                        <Button type="primary" size="large" danger>
-                            Петров
-                        </Button>
-                    </HStack>
+                    {selectIdCustomer && (
+                        <HStack gap="16">
+                            <Button type="primary" size="large" danger>
+                                Иванов
+                            </Button>
+                            <Button type="primary" size="large" danger>
+                                Петров
+                            </Button>
+                        </HStack>
+                    )}
                 </HStack>
-                <Content
+                {selectIdCustomer && (
+                    <Content
                     style={{
                         margin: '24px 16px',
                         padding: 24,
                         minHeight: 280,
                         background: colorBgContainer,
                     }}
-                >
+                    >
                     <VStack gap="16">
                         <HStack max gap="16" justify="between">
                             <HStack gap="8">
                                 <Typography.Title level={4} style={{marginBottom: 0}}>
-                                    {customers.find((customer) => customer.id === selectIdCustomer).name}
+                                    {customers.find((customer) => customer?.id === selectIdCustomer)?.name}
                                 </Typography.Title>
                                 {/* <Button type="text">
                                     <EditOutlined />
@@ -251,33 +305,45 @@ export const BlockNotePage = ({ className }: BlockNotePageProps) => {
                             </Button>
                         </HStack>
                         <Divider style={{margin: 0}} />
-                        <VStack gap="16" max>
-                            {notes.map((note) => (
+                        {loadingNote ? (
 
-                                <HStack key={note.id} align="start" max justify="between" className={cls.blockWithNote}>
-                                    <Checkbox checked={note.resolved} style={{width: '100%'}}>
-                                        <VStack max>
-                                            <Typography.Text strong delete={note.resolved} style={{marginBottom: 0}}>
-                                                {note.title}
+                            <VStack gap="16" max>
+                                <Skeleton.Input active size="large" block />
+                            </VStack>
+                        ) : (
+                            <VStack gap="16" max>
+                                {notes.map((note) => (
+
+                                    <HStack key={note.id} align="start" max justify="between" className={cls.blockWithNote}>
+                                        <Checkbox
+                                            checked={note.resolved}
+                                            onClick={(e) => handleChangeResolve(note.id, note.resolved)}
+                                            style={{width: '100%'}}
+                                        >
+                                            <VStack max>
+                                                <Typography.Text strong delete={note.resolved} style={{marginBottom: 0}}>
+                                                    {note.title}
+                                                </Typography.Text>
+                                                <Typography.Text style={{marginBottom: 0}}>
+                                                    {note.text}
+                                                </Typography.Text>
+                                            </VStack>
+                                        </Checkbox>
+                                        <HStack gap="16">
+                                            <Typography.Text style={{marginBottom: 0, whiteSpace: 'nowrap'}}>
+                                                {note.deadlineString}
                                             </Typography.Text>
-                                            <Typography.Text style={{marginBottom: 0}}>
-                                                {note.text}
-                                            </Typography.Text>
-                                        </VStack>
-                                    </Checkbox>
-                                    <HStack gap="16">
-                                        <Typography.Text style={{marginBottom: 0, whiteSpace: 'nowrap'}}>
-                                            {note.deadlineString}
-                                        </Typography.Text>
-                                        <Button type="primary" danger>
-                                            <DeleteOutlined />
-                                        </Button>
+                                            <Button type="primary" danger onClick={() => handleDeleteNode(note.id)}>
+                                                <DeleteOutlined />
+                                            </Button>
+                                        </HStack>
                                     </HStack>
-                                </HStack>
-                            ))}
-                        </VStack>
+                                ))}
+                            </VStack>
+                        )}
                     </VStack>
-                </Content>
+                    </Content>
+                )}
             </Layout>
             <Modal
                     centered
